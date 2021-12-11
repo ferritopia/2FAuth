@@ -16,6 +16,7 @@ return [
     'settings' => 'Settings',
     'account' => 'Account',
     'oauth' => 'OAuth',
+    'webauthn' => 'WebAuthn',
     'tokens' => 'Tokens',
     'options' => 'Options',
     'confirm' => [

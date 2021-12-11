@@ -19,6 +19,7 @@ import PasswordReset    from './views/auth/password/Reset'
 import SettingsOptions  from './views/settings/Options'
 import SettingsAccount  from './views/settings/Account'
 import SettingsOAuth    from './views/settings/OAuth'
+import SettingsWebAuthn from './views/settings/WebAuthn'
 import GeneratePAT      from './views/settings/PATokens/Create'
 import Errors           from './views/Error'
 
@@ -40,6 +41,7 @@ const router = new Router({
         { path: '/settings/options', name: 'settings.options', component: SettingsOptions, meta: { requiresAuth: true } },
         { path: '/settings/account', name: 'settings.account', component: SettingsAccount, meta: { requiresAuth: true } },
         { path: '/settings/oauth', name: 'settings.oauth', component: SettingsOAuth, meta: { requiresAuth: true } },
+        { path: '/settings/webauthn', name: 'settings.webauthn', component: SettingsWebAuthn, meta: { requiresAuth: true } },
         { path: '/settings/oauth/pat/create', name: 'settings.oauth.generatePAT', component: GeneratePAT, meta: { requiresAuth: true } },
 
         { path: '/login', name: 'login', component: Login },

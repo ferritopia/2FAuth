@@ -6,6 +6,10 @@
             <form-field :form="form" fieldName="password" inputType="password" :label="$t('auth.forms.password')" />
             <form-buttons :isBusy="form.isBusy" :caption="$t('auth.sign_in')" />
         </form>
+        <v-button :nativeType="'button'" :isLoading="isBusy" :disabled="false" @click="webauthnLogin">webauthn login</v-button>
+        <button type="button" class="button" @click="webauthnLogin">webauthn login</button>
+        <slot />
+    </button>
         <p v-if=" !username ">{{ $t('auth.forms.dont_have_account_yet') }}&nbsp;<router-link :to="{ name: 'register' }" class="is-link">{{ $t('auth.register') }}</router-link></p>
         <p>{{ $t('auth.forms.forgot_your_password') }}&nbsp;<router-link :to="{ name: 'password.request' }" class="is-link">{{ $t('auth.forms.request_password_reset') }}</router-link></p>
     </form-wrapper>
@@ -23,7 +27,8 @@
                 form: new Form({
                     email: '',
                     password: ''
-                })
+                }),
+                isBusy: false,
             }
         },
 
@@ -51,7 +56,58 @@
                         this.$router.push({ name: 'genericError', params: { err: error.response } });
                     }
                 });
-            }
+            },
+
+            /**
+             * 
+             */
+            async webauthnLogin() {
+                this.isBusy = false
+
+                // check https env
+                if (!window.isSecureContext) {
+                    console.log('https only')
+                    return false
+                }
+
+                if (!window.PublicKeyCredential) {
+                    throw new Error("Unable to access credentials interface")
+                }
+
+                const loginOptions = await this.axios.post('/webauthn/login/options', { email: 'edouard@ganeau.me' }).then(res => res.data)
+                console.log('loginOptions')
+                console.log(loginOptions.allowCredentials[0].id)
+                console.log(loginOptions)
+                const publicKey = this.parseIncomingServerOptions(loginOptions)
+                // console.log('publicKey')
+                // console.log(publicKey)
+                const credentials = await navigator.credentials.get({ publicKey: publicKey })
+                console.log('credentials')
+                console.log(credentials)
+                const publicKeyCredential = this.parseOutgoingCredentials(credentials)
+                console.log('publicKeyCredential')
+                console.log(publicKeyCredential)
+
+                // if(!publicKeyCredential.response.userHandle) {
+                //     publicKeyCredential.response.userHandle = loginOptions.allowCredentials[0].id
+                // }
+
+                this.axios.post('/webauthn/login', publicKeyCredential, {returnError: true}).then(response => {
+                    this.$router.push({ name: 'accounts', params: { toRefresh: true } })
+                })
+                .catch(error => {
+                    if( error.response.status === 401 ) {
+
+                        this.$notify({ type: 'is-danger', text: this.$t('auth.forms.password_do_not_match'), duration:-1 })
+                    }
+                    else if( error.response.status !== 422 ) {
+
+                        this.$router.push({ name: 'genericError', params: { err: error.response } });
+                    }
+                });
+
+                this.isBusy = false
+            },
             
         },
 
